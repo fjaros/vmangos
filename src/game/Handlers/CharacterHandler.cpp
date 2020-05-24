@@ -45,6 +45,8 @@
 #include "MasterPlayer.h"
 #include "PlayerBroadcaster.h"
 
+#include "TheConstruct.h"
+
 // config option SkipCinematics supported values
 enum CinematicsSkipMode
 {
@@ -365,6 +367,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recv_data)
     sObjectMgr.InsertPlayerInCache(pNewChar);
     sObjectMgr.UpdatePlayerCachedPosition(pNewChar);
     _charactersCount += 1;
+
+    DoPostLogin(pNewChar);
 
     LoginDatabase.PExecute("DELETE FROM realmcharacters WHERE acctid= '%u' AND realmid = '%u'", GetAccountId(), realmID);
     LoginDatabase.PExecute("INSERT INTO realmcharacters (numchars, acctid, realmid) VALUES (%u, %u, %u)",  _charactersCount, GetAccountId(), realmID);

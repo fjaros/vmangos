@@ -4082,6 +4082,34 @@ ObjectGuid Unit::EffectSummonPet(uint32 spellId, uint32 petEntry, uint32 petLeve
         std::string new_name = sObjectMgr.GeneratePetName(petEntry);
         if (!new_name.empty())
             NewSummon->SetName(new_name);
+
+        // The Construct, set max pet spells
+        switch (petEntry) {
+            case 416: // Imp
+                NewSummon->LearnSpell(4511);
+                NewSummon->LearnSpell(11763);
+                NewSummon->LearnSpell(11767);
+                NewSummon->LearnSpell(11771);
+                break;
+            case 417: // Felhunter
+                NewSummon->LearnSpell(19480);
+                NewSummon->LearnSpell(19647);
+                NewSummon->LearnSpell(19660);
+                NewSummon->LearnSpell(19736);
+                break;
+            case 1860: // Voidwalker
+                NewSummon->LearnSpell(11775);
+                NewSummon->LearnSpell(17752);
+                NewSummon->LearnSpell(17854);
+                NewSummon->LearnSpell(19443);
+                break;
+            case 1863: // Succubus
+                NewSummon->LearnSpell(6358);
+                NewSummon->LearnSpell(7870);
+                NewSummon->LearnSpell(11780);
+                NewSummon->LearnSpell(11785);
+                break;
+        }
     }
     else if (NewSummon->getPetType() == HUNTER_PET)
         NewSummon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PET_RENAME);

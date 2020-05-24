@@ -469,7 +469,8 @@ bool ChatHandler::HandleReviveCommand(char* args)
 
     if (target)
     {
-        target->ResurrectPlayer(0.5f);
+        // revive with full hp/mana
+        target->ResurrectPlayer(1.0f);
         target->SpawnCorpseBones();
         PSendSysMessage(LANG_CHARACTER_REVIVED_ONLINE, playerLink(target->GetName()).c_str());
     }
@@ -480,6 +481,24 @@ bool ChatHandler::HandleReviveCommand(char* args)
         std::string playername;
         sObjectMgr.GetPlayerNameByGUID(target_guid, playername);
         PSendSysMessage(LANG_CHARACTER_REVIVED_OFFLINE, playerLink(playername).c_str());
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleReviveAllCommand(char* args)
+{
+    HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+    for (const auto& itr : m)
+    {
+        Player* pPlayer = itr.second;
+        if (pPlayer->IsInWorld() && pPlayer->IsDead())
+        {
+            HandleNamegoCommand((char*)pPlayer->GetName());
+            pPlayer->ResurrectPlayer(1.0f);
+            pPlayer->SpawnCorpseBones();
+            PSendSysMessage(LANG_CHARACTER_REVIVED_ONLINE, playerLink(pPlayer->GetName()).c_str());
+        }
     }
 
     return true;

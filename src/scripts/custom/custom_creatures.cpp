@@ -1037,10 +1037,29 @@ struct npc_training_dummyAI : ScriptedAI
         {
             attackers.emplace(pWho->GetObjectGuid(), std::time(nullptr));
         }
+
+        if (!pWho->IsPlayer())
+            AddAttackerToList(pWho->GetOwner());
     }
 
-    void DamageTaken(Unit* pWho, uint32& /*uiDamage*/) override
+    void DamageTaken(Unit* pWho, uint32& uiDamage) override
     {
+        if (pWho)
+            AddAttackerToList(pWho);
+
+        /* The Construct */
+        // Heal to full if damage causes health drop below 5%
+        float healthRatioAfterDamage =
+            ((float)m_creature->GetHealth() - uiDamage) / m_creature->GetMaxHealth();
+
+        if (healthRatioAfterDamage < 0.05f) {
+            m_creature->ModifyHealth(m_creature->GetMaxHealth());
+        }
+    }
+
+    void EnterCombat(Unit* pWho) override
+    {
+        ScriptedAI::EnterCombat(pWho);
         if (pWho)
             AddAttackerToList(pWho);
     }
@@ -1079,7 +1098,7 @@ struct npc_training_dummyAI : ScriptedAI
                 if (m_creature->GetThreatManager().isThreatListEmpty())
                     EnterEvadeMode();
 
-                m_uiCombatTimer = 15000;
+                m_uiCombatTimer = 1000;
             }
             else
                 m_uiCombatTimer -= diff;

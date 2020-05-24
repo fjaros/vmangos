@@ -83,6 +83,8 @@
 #include "world/world_event_naxxramas.h"
 #include "world/world_event_wareffort.h"
 
+#include "TheConstruct.h"
+
 #define ZONE_UPDATE_INTERVAL (1*IN_MILLISECONDS)
 
 #define PLAYER_SKILL_INDEX(x)       (PLAYER_SKILL_INFO_1_1 + ((x)*3))
@@ -5927,9 +5929,10 @@ void Player::UpdateSpellTrainedSkills(uint32 spellId, bool apply)
     {
         if (apply)
         {
-            uint16 value = std::max(skillLearnInfo->value, GetSkillValuePure(skillLearnInfo->skill));
-            uint16 max = std::max((!skillLearnInfo->maxvalue ? GetSkillMaxForLevel() : skillLearnInfo->maxvalue), GetSkillMaxPure(skillLearnInfo->skill));
-            SetSkill(skillLearnInfo->skill, value, max, skillLearnInfo->step);
+                uint16 value = std::max(skillLearnInfo->value, GetSkillValuePure(skillLearnInfo->skill));
+                //uint16 max = std::max((!skillLearnInfo->maxvalue ? GetSkillMaxForLevel() : skillLearnInfo->maxvalue), GetSkillMaxPure(skillLearnInfo->skill));
+                uint16 max = GetSkillMaxForLevel();
+                SetSkill(skillLearnInfo->skill, max, max, skillLearnInfo->step);
         }
         else
         {
@@ -16179,11 +16182,22 @@ void Player::SaveToDB(bool online, bool force)
 
     if (!IsBeingTeleported())
     {
-        uberInsert.addUInt32(GetMapId());
-        uberInsert.addFloat(finiteAlways(GetPositionX()));
-        uberInsert.addFloat(finiteAlways(GetPositionY()));
-        uberInsert.addFloat(finiteAlways(GetPositionZ()));
-        uberInsert.addFloat(MapManager::NormalizeOrientation(finiteAlways(GetOrientation())));
+        if (HasAtLoginFlag(AT_LOGIN_FIRST) && GetTeam() == ALLIANCE)
+        {
+            uberInsert.addUInt32(0);
+            uberInsert.addFloat(-4913.86f);
+            uberInsert.addFloat(-963.105f);
+            uberInsert.addFloat(501.482f);
+            uberInsert.addFloat(3.17839);
+        }
+        else
+        {
+            uberInsert.addUInt32(GetMapId());
+            uberInsert.addFloat(finiteAlways(GetPositionX()));
+            uberInsert.addFloat(finiteAlways(GetPositionY()));
+            uberInsert.addFloat(finiteAlways(GetPositionZ()));
+            uberInsert.addFloat(MapManager::NormalizeOrientation(finiteAlways(GetOrientation())));
+        }
     }
     else
     {
@@ -16291,6 +16305,10 @@ void Player::SaveToDB(bool online, bool force)
     // Systeme de phasing
     sObjectMgr.SetPlayerWorldMask(GetGUIDLow(), GetWorldMask());
     GetSession()->SaveTutorialsData();                      // changed only while character in game
+
+    if (HasAtLoginFlag(AT_LOGIN_FIRST)) {
+        DoAtLogin(this);
+    }
 
     CharacterDatabase.CommitTransaction();
 

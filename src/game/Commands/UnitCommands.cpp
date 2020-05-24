@@ -576,6 +576,25 @@ bool ChatHandler::HandleAuraCommand(char* args)
     return HandleAuraHelper(spellId, duration, target);
 }
 
+bool ChatHandler::HandleAuraAllCommand(char* args)
+{
+    bool ret = false;
+    uint32 spellId = ExtractSpellIdFromLink(&args);
+    // Aura duration in seconds
+    int32 duration = 0;
+    ExtractInt32(&args, duration);
+
+    HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+    for (const auto& itr : m)
+    {
+        Player* pPlayer = itr.second;
+        if (pPlayer->IsInWorld())
+            ret |= HandleAuraHelper(spellId, duration, pPlayer);
+    }
+
+    return ret;
+}
+
 bool ChatHandler::HandleUnAuraCommand(char* args)
 {
     Unit* target = GetSelectedUnit();

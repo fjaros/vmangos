@@ -2459,6 +2459,31 @@ CreatureAI* GetAI_npc_oozeling_jubjub(Creature* pCreature)
     return new npc_oozeling_jubjubAI(pCreature);
 }
 
+bool GossipHello_go_aq40(Player* pPlayer, Creature* pCreature)
+{
+    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "To the Temple of Ahn'Qiraj!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    pPlayer->SEND_GOSSIP_MENU(1, pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_go_aq40(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    switch (uiAction)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:
+            if (pPlayer->TeleportTo(531, -8213.48f, 2016.0f, 129.072f, 1.28414f))
+            {
+                if (!pPlayer->IsAlive())
+                {
+                    pPlayer->ResurrectPlayer(0.5f, false);
+                    pPlayer->SpawnCorpseBones();
+                }
+            }
+            break;
+    }
+    return true;
+}
+
 void AddSC_npcs_special()
 {
     Script* newscript;
@@ -2606,5 +2631,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_oozeling_jubjub";
     newscript->GetAI = &GetAI_npc_oozeling_jubjub;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_go_aq40";
+    newscript->pGossipHello = &GossipHello_go_aq40;
+    newscript->pGossipSelect = &GossipSelect_go_aq40;
     newscript->RegisterSelf();
 }
