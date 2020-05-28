@@ -504,6 +504,43 @@ bool ChatHandler::HandleReviveAllCommand(char* args)
     return true;
 }
 
+bool ChatHandler::HandleGodAllCommand(char* args)
+{
+    bool value;
+    if (!ExtractOnOff(&args, value))
+    {
+        SendSysMessage(LANG_USE_BOL);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+    for (const auto& itr : m)
+    {
+        Player* pPlayer = itr.second;
+        if (pPlayer->IsInWorld())
+        {
+            pPlayer->SetCheatGod(value, true);
+            PSendSysMessage(LANG_YOU_SET_GOD, value ? "on" : "off", GetNameLink(pPlayer).c_str());
+        }
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleTeleAllCommand(char* args)
+{
+    HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+    for (const auto& itr : m)
+    {
+        Player* pPlayer = itr.second;
+        if (pPlayer->IsInWorld() && m_session->GetPlayer()->GetGUID() != pPlayer->GetGUID())
+            HandleNamegoCommand((char*)pPlayer->GetName());
+    }
+
+    return true;
+}
+
 bool ChatHandler::HandleExploreCheatCommand(char* args)
 {
     if (!*args)

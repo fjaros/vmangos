@@ -1130,6 +1130,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "knockback",      SEC_GAMEMASTER,     false, &ChatHandler::HandleKnockBackCommand,           "", nullptr },
         { "revive",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleReviveCommand,              "", nullptr },
         { "reviveall",      SEC_GAMEMASTER,     true,  &ChatHandler::HandleReviveAllCommand,           "", nullptr },
+        { "godall",         SEC_GAMEMASTER,     true,  &ChatHandler::HandleGodAllCommand,              "", nullptr },
+        { "teleall",        SEC_GAMEMASTER,     true,  &ChatHandler::HandleTeleAllCommand,             "", nullptr },
         { "mount",          SEC_GAMEMASTER,     false, &ChatHandler::HandleMountCommand,               "", nullptr },
         { "dismount",       SEC_PLAYER,         false, &ChatHandler::HandleDismountCommand,            "", nullptr },
         { "gps",            SEC_MODERATOR,      false, &ChatHandler::HandleGPSCommand,                 "", nullptr },
