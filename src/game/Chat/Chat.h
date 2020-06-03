@@ -866,6 +866,7 @@ class ChatHandler
         bool HandleMovegensCommand(char* args);
 
         bool HandleCooldownCommand(char* args);
+        bool HandleCooldownAllCommand(char* args);
         bool HandleUnLearnCommand(char* args);
         bool HandleUnLearnAllGMCommand(char* args);
         bool HandleUnLearnAllCraftsCommand(char* args);

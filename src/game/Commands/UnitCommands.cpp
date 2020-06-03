@@ -2072,6 +2072,21 @@ bool ChatHandler::HandleCooldownCommand(char* args)
     return true;
 }
 
+bool ChatHandler::HandleCooldownAllCommand(char* args)
+{
+    HashMapHolder<Player>::MapType& m = sObjectAccessor.GetPlayers();
+    for (const auto& itr : m)
+    {
+        Player* pPlayer = itr.second;
+        if (pPlayer->IsInWorld())
+        {
+            pPlayer->RemoveAllSpellCooldown();
+            PSendSysMessage(LANG_REMOVEALL_COOLDOWN, GetNameLink(pPlayer).c_str());
+        }
+    }
+
+    return true;
+}
 
 bool ChatHandler::HandleNameDieCommand(char* args)
 {
