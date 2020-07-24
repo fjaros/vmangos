@@ -1038,7 +1038,7 @@ struct npc_training_dummyAI : ScriptedAI
             attackers.emplace(pWho->GetObjectGuid(), std::time(nullptr));
         }
 
-        if (!pWho->IsPlayer())
+        if (pWho->IsPet() && pWho->GetOwner())
             AddAttackerToList(pWho->GetOwner());
     }
 
