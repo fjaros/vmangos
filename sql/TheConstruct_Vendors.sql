@@ -39,7 +39,8 @@ scale,script_name) values
 (2000026,10,16151,'Vroom Boom','Chief Engineer',0,63,63,1,1,1,1,35,16388,1,''),
 (2000027,10,11686,'Flower Shower','Chief Herbalist',0,63,63,1,1,1,1,35,16388,1,''),
 (2000028,10,3539,'Vain Thorium','Chief Miner',0,63,63,1,1,1,1,35,16388,1,''),
-(2000029,10,8803,'Tinker Binker','Crafter',0,63,63,1,1,1,1,35,16388,1,'');
+(2000029,10,8803,'Tinker Binker','Crafter',0,63,63,1,1,1,1,35,16388,1,''),
+(2000030,10,14884,'Ivus the NR Lord','',0,63,63,1,1,1,1,35,16388,0.4,'');
 
 -- Combat Dummy
 UPDATE creature_template SET level_min=63,level_max=63,health_min=50000,health_max=50000,armor=0,`type`=0,mechanic_immune_mask=8388624,ai_name='',script_name='custom_npc_training_dummy' WHERE entry=1921;
