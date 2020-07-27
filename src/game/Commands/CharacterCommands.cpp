@@ -492,11 +492,11 @@ bool ChatHandler::HandleReviveAllCommand(char* args)
     for (const auto& itr : m)
     {
         Player* pPlayer = itr.second;
-        if (pPlayer->IsInWorld() && pPlayer->IsDead())
+        if (pPlayer->IsInWorld() && pPlayer->IsDead() && m_session->GetPlayer()->GetMapId() == pPlayer->GetMapId())
         {
+            pPlayer->SpawnCorpseBones();
             HandleNamegoCommand((char*)pPlayer->GetName());
             pPlayer->ResurrectPlayer(1.0f);
-            pPlayer->SpawnCorpseBones();
             PSendSysMessage(LANG_CHARACTER_REVIVED_ONLINE, playerLink(pPlayer->GetName()).c_str());
         }
     }
