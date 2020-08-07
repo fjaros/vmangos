@@ -90,6 +90,9 @@ struct boss_sarturaAI : public ScriptedAI
         m_bAttackOff = false;
 
         m_uiEvadeCheckTimer = 2500;
+        if (m_pInstance)
+            m_pInstance->SetData(TYPE_SARTURA, NOT_STARTED);
+        LeashEncounter();
     }
 
     void MoveInLineOfSight(Unit* pWho) override

@@ -228,9 +228,15 @@ void instance_temple_of_ahnqiraj::OnCreatureRespawn(Creature* pCreature)
     case NPC_QIRAJI_BRAINWASHER:
     case NPC_VEKNISS_GUARDIAN:
     case NPC_VEKNISS_WARRIOR:
-    case NPC_SARTURA_S_ROYAL_GUARD:
         if (m_auiEncounter[TYPE_SARTURA] == DONE)
             pCreature->AddObjectToRemoveList();
+        break;
+    case NPC_SARTURA_S_ROYAL_GUARD:
+        if (m_auiEncounter[TYPE_SARTURA] == DONE)
+        {
+            pCreature->SetDeathState(JUST_DIED);
+            pCreature->SetHealth(0);
+        }
         break;
     case NPC_VEKNISS_DRONE:
     case NPC_VEKNISS_SOLDIER:
