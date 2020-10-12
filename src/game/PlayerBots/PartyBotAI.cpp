@@ -16,30 +16,7 @@ enum PartyBotSpells
     PB_SPELL_DRINK = 1137,
     PB_SPELL_AUTO_SHOT = 75,
     PB_SPELL_SHOOT_WAND = 5019,
-    PB_SPELL_TAME_BEAST = 13481,
-
-    PB_SPELL_SUMMON_IMP = 688,
-    PB_SPELL_SUMMON_VOIDWALKER = 697,
-    PB_SPELL_SUMMON_FELHUNTER = 691,
-    PB_SPELL_SUMMON_SUCCUBUS = 712,
-
-    PB_PET_WOLF    = 565,
-    PB_PET_CAT     = 681,
-    PB_PET_BEAR    = 822,
-    PB_PET_CRAB    = 831,
-    PB_PET_GORILLA = 1108,
-    PB_PET_BIRD    = 1109,
-    PB_PET_BOAR    = 1190,
-    PB_PET_BAT     = 1554,
-    PB_PET_CROC    = 1693,
-    PB_PET_SPIDER  = 1781,
-    PB_PET_OWL     = 1997,
-    PB_PET_STRIDER = 2322,
-    PB_PET_SCORPID = 3127,
-    PB_PET_SERPENT = 3247,
-    PB_PET_RAPTOR  = 3254,
-    PB_PET_TURTLE  = 3461,
-    PB_PET_HYENA   = 4127,
+    PB_SPELL_HONORLESS_TARGET = 2479,
 };
 
 #define PB_UPDATE_INTERVAL 1000
@@ -95,14 +72,53 @@ void PartyBotAI::CloneFromPlayer(Player const* pPlayer)
 
 void PartyBotAI::LearnPremadeSpecForClass()
 {
+    // First attempt to find a spec. Must be for correct class, level and role.
     for (const auto& itr : sObjectMgr.GetPlayerPremadeSpecTemplates())
     {
         if (itr.second.requiredClass == me->GetClass() &&
-           ((m_role == ROLE_INVALID) || (itr.second.role == m_role)))
+           ((m_role == ROLE_INVALID) || (itr.second.role == m_role)) &&
+           (!m_level || (itr.second.level == m_level)))
         {
+            if (m_role == ROLE_INVALID)
+                m_role = itr.second.role;
+
             sObjectMgr.ApplyPremadeSpecTemplateToPlayer(itr.first, me);
-            break;
+            return;
         }
+    }
+
+    if (m_role != ROLE_INVALID)
+    {
+        // Second attempt, but this time we will accept any role, just so
+        // that we have level appropriate spells.
+        for (const auto& itr : sObjectMgr.GetPlayerPremadeSpecTemplates())
+        {
+            if (itr.second.requiredClass == me->GetClass() &&
+                (!m_level || (itr.second.level == m_level)))
+            {
+                sObjectMgr.ApplyPremadeSpecTemplateToPlayer(itr.first, me);
+                return;
+            }
+        }
+    }
+    
+    if (m_level > 1)
+    {
+        // Third attempt. Check for lower level specs. Better than nothing.
+        for (const auto& itr : sObjectMgr.GetPlayerPremadeSpecTemplates())
+        {
+            if (itr.second.requiredClass == me->GetClass() &&
+                itr.second.level < m_level)
+            {
+                sObjectMgr.ApplyPremadeSpecTemplateToPlayer(itr.first, me);
+                break;
+            }
+        }
+
+        me->MonsterSay("No spec template for this level found!");
+        me->GiveLevel(m_level);
+        me->InitTalentForLevel();
+        me->SetUInt32Value(PLAYER_XP, 0);
     }
 }
 
@@ -164,7 +180,11 @@ bool PartyBotAI::DrinkAndEat()
             me->StopMoving();
             me->GetMotionMaster()->MoveIdle();
         }
-        me->CastSpell(me, PB_SPELL_FOOD, true);
+        if (SpellEntry const* pSpellEntry = sSpellMgr.GetSpellEntry(PB_SPELL_FOOD))
+        {
+            me->CastSpell(me, pSpellEntry, true);
+            me->RemoveSpellCooldown(*pSpellEntry);
+        }
         return true;
     }
 
@@ -175,11 +195,46 @@ bool PartyBotAI::DrinkAndEat()
             me->StopMoving();
             me->GetMotionMaster()->MoveIdle();
         }
-        me->CastSpell(me, PB_SPELL_DRINK, true);
+        if (SpellEntry const* pSpellEntry = sSpellMgr.GetSpellEntry(PB_SPELL_DRINK))
+        {
+            me->CastSpell(me, pSpellEntry, true);
+            me->RemoveSpellCooldown(*pSpellEntry);
+        }
         return true;
     }
 
     return needToEat || needToDrink;
+}
+
+bool PartyBotAI::ShouldAutoRevive() const
+{
+    if (me->GetDeathState() == DEAD)
+        return true;
+
+    bool alivePlayerNearby = false;
+    Group* pGroup = me->GetGroup();
+    for (GroupReference* itr = pGroup->GetFirstMember(); itr != nullptr; itr = itr->next())
+    {
+        if (Player* pMember = itr->getSource())
+        {
+            if (pMember == me)
+                continue;
+
+            if (pMember->IsInCombat())
+                return false;
+
+            if (pMember->IsAlive())
+            {
+                if (IsHealerClass(pMember->GetClass()))
+                    return false;
+
+                if (me->IsWithinDistInMap(pMember, 15.0f))
+                    alivePlayerNearby = true;
+            }
+        }
+    }
+
+    return alivePlayerNearby;
 }
 
 bool PartyBotAI::AttackStart(Unit* pVictim)
@@ -444,19 +499,16 @@ void PartyBotAI::UpdateAI(uint32 const diff)
         }
         else
         {
-            if (me->GetDeathState() == DEAD)
+            if (ShouldAutoRevive())
             {
                 me->ResurrectPlayer(0.5f);
                 me->SpawnCorpseBones();
-                me->SendCreateUpdateToPlayer(pLeader);
+                me->CastSpell(me, PB_SPELL_HONORLESS_TARGET, true);
             }
         }
         
         return;
     }
-
-    if (m_paused)
-        return;
 
     if (me->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL))
     {
@@ -715,7 +767,7 @@ void PartyBotAI::UpdateOutOfCombatAI_Paladin()
 
     if (m_isBuffing &&
        (!m_spells.paladin.pBlessingBuff ||
-        !me->GetGlobalCooldownMgr().HasGlobalCooldown(m_spells.paladin.pBlessingBuff)))
+        !me->HasGCD(m_spells.paladin.pBlessingBuff)))
     {
         m_isBuffing = false;
     }
@@ -1284,7 +1336,7 @@ void PartyBotAI::UpdateOutOfCombatAI_Mage()
 
     if (m_isBuffing &&
        (!m_spells.mage.pArcaneIntellect ||
-        !me->GetGlobalCooldownMgr().HasGlobalCooldown(m_spells.mage.pArcaneIntellect)))
+        !me->HasGCD(m_spells.mage.pArcaneIntellect)))
     {
         m_isBuffing = false;
     }
@@ -1298,8 +1350,8 @@ void PartyBotAI::UpdateInCombatAI_Mage()
     if (Unit* pVictim = me->GetVictim())
     {
         if (m_spells.mage.pPyroblast &&
-            m_spells.mage.pPresenceOfMind &&
-            me->HasAura(m_spells.mage.pPresenceOfMind->Id) &&
+           ((m_spells.mage.pPresenceOfMind && me->HasAura(m_spells.mage.pPresenceOfMind->Id)) ||
+            (!pVictim->IsInCombat() && (pVictim->GetMaxHealth() > me->GetMaxHealth()) && (me->GetDistance(pVictim) > 30.0f))) &&
             CanTryToCastSpell(pVictim, m_spells.mage.pPyroblast))
         {
             if (DoCastSpell(pVictim, m_spells.mage.pPyroblast) == SPELL_CAST_OK)
@@ -1575,7 +1627,7 @@ void PartyBotAI::UpdateOutOfCombatAI_Priest()
 
     if (m_isBuffing &&
        (!m_spells.priest.pPowerWordFortitude ||
-        !me->GetGlobalCooldownMgr().HasGlobalCooldown(m_spells.priest.pPowerWordFortitude)))
+        !me->HasGCD(m_spells.priest.pPowerWordFortitude)))
     {
         m_isBuffing = false;
     }
@@ -1796,7 +1848,7 @@ void PartyBotAI::UpdateOutOfCombatAI_Warlock()
 
     if (m_isBuffing &&
        (!m_spells.warlock.pDetectInvisibility ||
-        !me->GetGlobalCooldownMgr().HasGlobalCooldown(m_spells.warlock.pDetectInvisibility)))
+        !me->HasGCD(m_spells.warlock.pDetectInvisibility)))
     {
         m_isBuffing = false;
     }
@@ -2323,7 +2375,7 @@ void PartyBotAI::UpdateInCombatAI_Rogue()
                 (me->GetHealthPercent() < 10.0f))
             {
                 if (m_spells.rogue.pPreparation &&
-                    me->HasSpellCooldown(m_spells.rogue.pVanish->Id) &&
+                    !me->IsSpellReady(m_spells.rogue.pVanish->Id) &&
                     CanTryToCastSpell(me, m_spells.rogue.pPreparation))
                 {
                     if (DoCastSpell(me, m_spells.rogue.pPreparation) == SPELL_CAST_OK)
@@ -2554,7 +2606,7 @@ void PartyBotAI::UpdateOutOfCombatAI_Druid()
 
     if (m_isBuffing &&
        (!m_spells.druid.pMarkoftheWild ||
-        !me->GetGlobalCooldownMgr().HasGlobalCooldown(m_spells.druid.pMarkoftheWild)))
+        !me->HasGCD(m_spells.druid.pMarkoftheWild)))
     {
         m_isBuffing = false;
     }
