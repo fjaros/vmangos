@@ -2049,6 +2049,11 @@ bool ChatHandler::HandleCooldownListCommand(char* /*args*/)
     return true;
 }
 
+bool ChatHandler::HandleCooldownCommand(char* args)
+{
+    return HandleCooldownClearCommand(args);
+}
+
 bool ChatHandler::HandleCooldownClearCommand(char* args)
 {
     Unit* target = GetSelectedUnit();
@@ -2116,7 +2121,7 @@ bool ChatHandler::HandleCooldownAllCommand(char* args)
         Player* pPlayer = itr.second;
         if (pPlayer->IsInWorld())
         {
-            pPlayer->RemoveAllSpellCooldown();
+            pPlayer->RemoveAllCooldowns();
             PSendSysMessage(LANG_REMOVEALL_COOLDOWN, GetNameLink(pPlayer).c_str());
         }
     }
