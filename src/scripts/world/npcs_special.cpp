@@ -2336,6 +2336,31 @@ bool GossipSelect_go_aq40(Player* pPlayer, Creature* pCreature, uint32 uiSender,
     return true;
 }
 
+bool GossipHello_go_naxx(Player* pPlayer, Creature* pCreature)
+{
+    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "To the Necropolis of Naxxramas!", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    pPlayer->SEND_GOSSIP_MENU(1, pCreature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_go_naxx(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    switch (uiAction)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:
+            if (pPlayer->TeleportTo(0, 3103.14f, -3714.73f, 132.896f, 5.78462f))
+            {
+                if (!pPlayer->IsAlive())
+                {
+                    pPlayer->ResurrectPlayer(0.5f, false);
+                    pPlayer->SpawnCorpseBones();
+                }
+            }
+            break;
+    }
+    return true;
+}
+
 void AddSC_npcs_special()
 {
     Script* newscript;
@@ -2483,5 +2508,11 @@ void AddSC_npcs_special()
     newscript->Name = "npc_go_aq40";
     newscript->pGossipHello = &GossipHello_go_aq40;
     newscript->pGossipSelect = &GossipSelect_go_aq40;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_go_naxx";
+    newscript->pGossipHello = &GossipHello_go_naxx;
+    newscript->pGossipSelect = &GossipSelect_go_naxx;
     newscript->RegisterSelf();
 }
