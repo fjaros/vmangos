@@ -735,7 +735,8 @@ void instance_naxxramas::OnCreatureRespawn(Creature * pCreature)
 
     if (forcedDespawn)
     {
-        pCreature->AddObjectToRemoveList();
+        //pCreature->AddObjectToRemoveList();
+        pCreature->AI()->JustReachedHome();
     }
 }
 
