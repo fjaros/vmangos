@@ -502,7 +502,7 @@ void InsertPet(Player *player) {
     insert.Execute();
 
     static SqlStatementID insPetSpell;
-    SqlStatement petSpellStmt = CharacterDatabase.CreateStatement(insPetSpell, "INSERT INTO pet_spell (guid,spell,active) VALUES (?, ?, ?)");
+    SqlStatement petSpellStmt = CharacterDatabase.CreateStatement(insPetSpell, "REPLACE INTO pet_spell (guid,spell,active) VALUES (?, ?, ?)");
     petSpellStmt.addUInt32(id);
     petSpellStmt.addUInt32(psCache->spell);
     petSpellStmt.addUInt32(psCache->active);
